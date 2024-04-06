@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Cover.Me",
+  "version": "1.0",
+  "description": "A Chrome extension to generate a cover letter from your resume and job description via ChatGPT.",
+  "action": {
+    "default_popup": "index.html"
+  },
+  "permissions": ["scripting", "tabs", "activeTab"],
+  "host_permissions": ["https://*/*", "http://*/*"],
+  "icons": {}
+}
