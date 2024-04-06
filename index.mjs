@@ -1,18 +1,9 @@
-//Requirements
-//Resume
-//Job Description
-//Goal - Produce Cover Letter
-//Steps
-//1) Get Resume and Job Description
-//2) Input both into chatGPT to genrate cover letter
-//3) Return Cover letter to client
-
 import express from "express";
 import PDFDocument from "pdfkit";
 import fs from "fs";
 import cors from "cors";
 import multer from "multer";
-import pdf from "pdf-parse";
+import pdf2json from "pdf2json"; // Replace pdf-parse with pdf2json
 import { generate_letter, formatText } from "./gpt.mjs";
 import { promisify } from "util";
 import path from "path";
@@ -47,10 +38,11 @@ app.post(
         throw new Error("Job description must be a text file.");
       }
 
-      const resumeText = await pdf(resumeFile.buffer);
+      // Using pdf2json to extract text from PDF
+      const resumeText = await extractTextFromPDF(resumeFile.buffer);
       const jobDescriptionText = jobDescriptionFile.buffer.toString("utf8");
 
-      const formattedResume = formatText(resumeText.text);
+      const formattedResume = formatText(resumeText);
       const formattedJobDescription = formatText(jobDescriptionText);
 
       const letterContent = await generate_letter(
@@ -77,6 +69,23 @@ app.post(
     }
   }
 );
+
+// Function to extract text from PDF using pdf2json
+async function extractTextFromPDF(pdfBuffer) {
+  return new Promise((resolve, reject) => {
+    const pdfParser = new pdf2json.PdfParser();
+    pdfParser.on("pdfParser_dataError", reject);
+    pdfParser.on("pdfParser_dataReady", (pdfData) => {
+      const textContent = pdfData.formImage.Pages.map((page) =>
+        page.Texts.map((text) =>
+          Buffer.from(text.R[0].T, "base64").toString("utf8")
+        ).join(" ")
+      ).join(" ");
+      resolve(textContent);
+    });
+    pdfParser.parseBuffer(pdfBuffer);
+  });
+}
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
