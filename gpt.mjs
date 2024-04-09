@@ -26,7 +26,8 @@ async function generate_letter(resume, job_description) {
       "Make sure to keep the cover letter down to one page with 3 to 4 sentences per paragraph." +
       "Do not include a template holder for the users address and phone number. " +
       "Do not include the template holder for the company address. " +
-      "Do not use the following characters in the name, email and date line: []" +
+      "Do not surround the applicant's name, email and email address in square brackets. " +
+      "Do not surround date in square brackets. " +
       "Include the user's full name and email address in the contact information. " +
       "Also make sure to include today's date, and format it like MM/DD/YYYY. " +
       "Resume: {resume}, Job Description: {job_description}, Today's Date:{date}"

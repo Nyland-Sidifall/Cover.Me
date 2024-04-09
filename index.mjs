@@ -5,7 +5,7 @@ import cors from "cors";
 import multer from "multer";
 import { generate_letter, formatText } from "./gpt.mjs";
 import { promisify } from "util";
-import pdf from "pdf-parse"; // Import pdf-parse
+import { PdfReader } from "pdfreader";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,7 +14,6 @@ const upload = multer({ storage: multer.memoryStorage() });
 app.use(express.json());
 app.use(cors());
 
-// Utility to delete files asynchronously
 const unlinkAsync = promisify(fs.unlink);
 
 app.post(
@@ -37,11 +36,22 @@ app.post(
         throw new Error("Job description must be a text file.");
       }
 
-      // Use pdf-parse to extract text from the PDF file
-      const data = await pdf(resumeFile.buffer);
-      const resumeText = data.text;
-      const jobDescriptionText = jobDescriptionFile.buffer.toString("utf8");
+      // Use pdfreader to extract text from the PDF file
+      const resumeText = await new Promise((resolve, reject) => {
+        const pdfReader = new PdfReader();
+        let texts = "";
+        pdfReader.parseBuffer(resumeFile.buffer, (err, item) => {
+          if (err) {
+            reject(err);
+          } else if (!item) {
+            resolve(texts); // Done reading file
+          } else if (item.text) {
+            texts += `${item.text} `;
+          }
+        });
+      });
 
+      const jobDescriptionText = jobDescriptionFile.buffer.toString("utf8");
       const formattedResume = formatText(resumeText);
       const formattedJobDescription = formatText(jobDescriptionText);
 
